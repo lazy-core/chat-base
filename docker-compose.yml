@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  traefik:
+    container_name: chat-base-traefik
+    image: traefik:v2.9
+    command:
+      - "--api.insecure=true"                  # Enables the dashboard (remove or secure for production)
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"                                # Public HTTP port
+      - "8080:8080"                            # Traefik dashboard (optional)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - chat-base
+
+  app:
+    container_name: chat-base-app
+    build: ./app
+    labels:
+      - "traefik.enable=true"
+      # Catch-all rule for the Vite app (front-end).
+      - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.vite.entrypoints=web"
+      # Internal port must match the one exposed in the app container.
+      - "traefik.http.services.vite.loadbalancer.server.port=4173"
+    networks:
+      - chat-base
+
+  server:
+    container_name: chat-base-server
+    build: ./server
+    labels:
+      - "traefik.enable=true"
+      # This rule routes requests that start with /api to your server.
+      # If you prefer a subdomain (e.g. api.yourdomain.com), update this rule accordingly.
+      - "traefik.http.routers.server.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.services.server.loadbalancer.server.port=5000"
+    networks:
+      - chat-base
+
+networks:
+  chat-base:
+    driver: bridge
