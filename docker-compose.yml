@@ -43,6 +43,10 @@ services:
       - "traefik.http.routers.server.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
       - "traefik.http.routers.server.entrypoints=server"
       - "traefik.http.services.server.loadbalancer.server.port=5000"
+    environment:
+      - MONGO_DB_USERNAME=${MONGO_DB_USERNAME}
+      - MONGO_DB_PASSWORD=${MONGO_DB_PASSWORD}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
     networks:
       - chat-base
 
@@ -64,11 +68,13 @@ services:
     image: mongo:5.0
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: base_db
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME}
     volumes:
       - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
     networks:
       - chat-base
 

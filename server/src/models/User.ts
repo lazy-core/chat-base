@@ -1,4 +1,4 @@
-// src/models/user.model.ts
+// src/models/User.ts
 import mongoose, { Document, Schema } from "mongoose";
 
 // Define the interface for a User document.
@@ -27,8 +27,7 @@ const UserSchema: Schema<IUser> = new Schema(
       match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
     },
     password: {
-      type: String,
-      required: [true, "Password is required"],
+      type: String
     },
   },
   {

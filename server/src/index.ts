@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 
-import authRoutes from './routes/auth';
+import { startMongoDB } from "./lib/db";
+
+import userRoutes from './routes/user';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,8 +14,14 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello from the Node.js Server with TypeScript!');
 });
 
-app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+async function startServer() {
+  await startMongoDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+startServer();
