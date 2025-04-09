@@ -7,18 +7,67 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Editor directories and files
+# Coverage directories (Istanbul, nyc, etc.)
+coverage
+.nyc_output
+
+# Compiled output
+dist/
+dist-ssr/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+
+# Dependency directories
+node_modules/
+
+# Caches and temporary files
+.cache/
+.npm/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Build output for bundlers and frameworks
+.next/
+out/
+.nuxt/
+.gatsby-cache/
+public/         # For Gatsby and similar frameworks
+.vuepress/dist/
+
+# Miscellaneous files
+*.tgz                   # npm pack output
+
+# Environment files (local development, secrets)
+.env
+.env.*.local
+
+# IDE and editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Others (Bower, FuseBox, Serverless, etc.)
+bower_components/
+.lock-wscript
+build/Release/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port

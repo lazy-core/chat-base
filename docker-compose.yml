@@ -8,10 +8,13 @@ services:
       - "--api.insecure=true"                  # Enables the dashboard (remove or secure for production)
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+      - "--entrypoints.app.address=:80"
+      - "--entrypoints.server.address=:5000"
+      - "--entrypoints.api.address=:5001"
     ports:
       - "80:80"                                # Public HTTP port
       - "8080:8080"                            # Traefik dashboard (optional)
+      - "5000:5000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -24,7 +27,7 @@ services:
       - "traefik.enable=true"
       # Catch-all rule for the Vite app (front-end).
       - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.vite.entrypoints=web"
+      - "traefik.http.routers.vite.entrypoints=app"
       # Internal port must match the one exposed in the app container.
       - "traefik.http.services.vite.loadbalancer.server.port=4173"
     networks:
@@ -37,11 +40,40 @@ services:
       - "traefik.enable=true"
       # This rule routes requests that start with /api to your server.
       # If you prefer a subdomain (e.g. api.yourdomain.com), update this rule accordingly.
-      - "traefik.http.routers.server.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.routers.server.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.server.entrypoints=server"
       - "traefik.http.services.server.loadbalancer.server.port=5000"
     networks:
       - chat-base
+
+  api:
+    container_name: chat-base-api
+    build: ./api
+    labels:
+      - "traefik.enable=true"
+      # This rule routes requests that start with /api to your api.
+      # If you prefer a subdomain (e.g. api.yourdomain.com), update this rule accordingly.
+      - "traefik.http.routers.api.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.api.entrypoints=api"
+      - "traefik.http.services.api.loadbalancer.api.port=5001"
+    networks:
+      - chat-base
+
+  mongodb:
+    container_name: chat-base-mongodb
+    image: mongo:5.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: base_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - chat-base
+
+volumes:
+  mongodb_data:
 
 networks:
   chat-base:

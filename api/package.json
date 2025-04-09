@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "api",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -12,10 +12,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "better-auth": "^1.2.5",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2"
+    "express": "^5.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
