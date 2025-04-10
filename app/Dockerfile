@@ -13,11 +13,11 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
+# Copy the vite config so that npx vite preview picks up your settings
+COPY vite.config.ts ./
+# (Optional: copy any other config files if needed, for example tsconfig, if they're used at runtime)
 ARG NODE_ENV
-RUN if [ "$NODE_ENV" = "development" ]; \
-  then export $(cat .env | xargs) && npm install; \
-  else npm install --only=production; \
-  fi
+RUN npm install
 # Only copy the built files (adjust if you need additional assets)
 COPY --from=builder /app/dist ./dist
 # Expose the port that Vite preview will run on

@@ -1,0 +1,25 @@
+# traefik/traefik.yml
+entryPoints:
+  app:
+    address: ":80"
+  appsecure:
+    address: ":443"
+  server:
+    address: ":5000"
+  api:
+    address: ":5001"
+
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    filename: /traefik/dynamic.yml
+    watch: true
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: letsencrypt@lazycore.io
+      storage: /traefik/acme.json
+      httpChallenge:
+        entryPoint: app

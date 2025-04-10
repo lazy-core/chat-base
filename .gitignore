@@ -71,3 +71,7 @@ build/Release/
 .fusebox/
 .dynamodb/
 .tern-port
+
+# Certificates
+traefik/acme.json
+traefik/dynamic.yml

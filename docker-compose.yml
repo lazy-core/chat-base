@@ -5,18 +5,31 @@ services:
     container_name: chat-base-traefik
     image: traefik:v2.9
     command:
+      - "--providers.file.filename=./traefik/dynamic.yml"
+      - "--providers.file.watch=true"
+
       - "--api.insecure=true"                  # Enables the dashboard (remove or secure for production)
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.app.address=:80"
+      - "--entrypoints.appsecure.address=:443"
       - "--entrypoints.server.address=:5000"
       - "--entrypoints.api.address=:5001"
+      
+      - "--certificatesResolvers.myresolver.acme.email=letsencrypt@lazycore.io"
+      - "--certificatesResolvers.myresolver.acme.storage=/traefik/acme.json"
+      - "--certificatesResolvers.myresolver.acme.httpChallenge.entryPoint=app"
     ports:
-      - "80:80"                                # Public HTTP port
-      - "8080:8080"                            # Traefik dashboard (optional)
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
       - "5000:5000"
+      - "5001:5001"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/traefik/dynamic.yml
+      - ./traefik/acme.json:/traefik/acme.json
     networks:
       - chat-base
 
