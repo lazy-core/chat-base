@@ -8,22 +8,14 @@
 # 4. CREATE DEFAULT USER IN MONGODB
 # 5. ASK FOR USER EMAIL
 
-# Set variables as necessary
-MONGO_HOST="localhost"
-MONGO_PORT="27017"
-DATABASE="chatdb"
-SCRIPT="initDefaultUser.js"
+# SERVER_URL="http://localhost:5000/user/create-root"
+# JSON_DATA='{"email": "penkra.emmanuel@gmail.com"}'
 
-# Optionally, if authentication is required, you can include -u and -p flags:
-# MONGO_USER="yourUser"
-# MONGO_PASS="yourPassword"
+# echo "Sending POST request to ${SERVER_URL}..."
+# echo "Payload: ${JSON_DATA}"
 
-echo "Initializing MongoDB database '${DATABASE}'..."
+# response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST -H "Content-Type: application/json" \
+#   -d "${JSON_DATA}" "${SERVER_URL}")
 
-# Run the JavaScript script using mongo shell (or mongosh)
-mongo --host $MONGO_HOST --port $MONGO_PORT $DATABASE $SCRIPT
-
-# For MongoDB with authentication, you might do:
-# mongo --host $MONGO_HOST --port $MONGO_PORT -u $MONGO_USER -p $MONGO_PASS --authenticationDatabase admin $DATABASE $SCRIPT
-
-echo "Database initialization complete."
+# echo "Response received:"
+# echo "${response}"

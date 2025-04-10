@@ -2,30 +2,38 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-// Extend the Request interface to include a 'user' property if needed.
-// (You might have a global declaration file for this.)
+import utils from "../lib/utils";
+
+import User from "../models/User";
+
 interface AuthenticatedRequest extends Request {
-  user?: any;
+  auth_user?: any;
+  auth_team_id?: string;
 }
 
-export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    res.status(401).json({ message: "Authorization header missing" });
-    return;
-  }
+function getBearerToken(req: Request){
+  const authHeader = req.headers['authorization']
+  return req.body.auth_token ?? req.query.auth_token ?? authHeader?.split(' ')[1]
+}
 
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    res.status(401).json({ message: "Token missing" });
-    return;
-  }
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  const token = getBearerToken(req)
+  const decodedToken = utils.decodeToken(token)
 
   try {
-    // const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // req.user = decoded;
+    if (!decodedToken && token == process.env.JWT_SECRET) {
+      var user = await User.findOne({ _id: req.body.user_id || req.query.user_id })
+    } else {
+      var user = await User.findOne({ _id: decodedToken?.userId || '' })
+      if (!user?.sessions.some(s => s.authToken == token))
+        return res.error(401, 'Invalid token provided')
+    }
+    
+    req.auth_user = user
+    req.auth_team_id = decodedToken?.teamId
+
     next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid token", error: (error as Error).message });
+    res.error(401, 'Invalid token')
   }
 };

@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 // Define the interface for a Team document.
 export interface ITeam extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string;
   members: {
     user: mongoose.Types.ObjectId; // Reference to a User document

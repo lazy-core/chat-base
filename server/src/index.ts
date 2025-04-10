@@ -1,23 +1,34 @@
 import express, { Request, Response } from 'express';
+import mongoose from "mongoose";
 
-import { startMongoDB } from "./lib/db";
+import { responseErrorHandler } from "./middlewares/error";
 
-import userRoutes from './routes/user';
+import routes from './routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+app.use(responseErrorHandler)
 
-// Example global endpoint
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello from the Node.js Server with TypeScript!');
-});
+async function startMongoDB(): Promise<void> {
+  const mongoUrl = `mongodb://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@mongodb:27017/${process.env.MONGO_DB_NAME}?authSource=admin&retryWrites=true&w=majority`
+  
+  mongoose.set("strictQuery", false);
 
-app.use('/user', userRoutes);
+  try {
+    await mongoose.connect(mongoUrl);
+    console.log("MongoDB Connection Successful");
+  } catch (error: any) {
+    console.error("MongoDB Connection Failed:", error);
+    process.exit(1);
+  }
+}
 
 async function startServer() {
   await startMongoDB();
+
+  app.use('/', routes)
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

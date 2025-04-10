@@ -2,82 +2,77 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User, { IUser } from "../models/User"; // your Mongoose model for users
+import mongoose from "mongoose";
 
-// Signup: create a new user
-export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  // try {
-  //   const { name, email, password } = req.body;
-  //   if (!name || !email || !password) {
-  //     res.status(400).json({ message: "Name, email, and password are required." });
-  //     return;
-  //   }
+import constants from "../lib/constants";
+import utils from "../lib/utils";
 
-  //   // Check if user already exists
-  //   const existingUser: IUser | null = await User.findOne({ email });
-  //   if (existingUser) {
-  //     res.status(400).json({ message: "Email already exists." });
-  //     return;
-  //   }
+import Team from "../models/Team";
+import User from "../models/User";
 
-  //   // Hash the password
-  //   const hashedPassword = await bcrypt.hash(password, 10);
-  //   // Create the user record in the database
-  //   const newUser: IUser = await User.create({ name, email, password: hashedPassword });
-  //   res.status(201).json({ message: "User created", user: newUser });
-  // } catch (error) {
-  //   next(error);
-  // }
-};
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body
+    if (!utils.isValidEmail(email))
+      return res.error(400, "Email is invalid");
 
-// Login: authenticate the user and return a JWT
-export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  // try {
-  //   const { email, password } = req.body;
-  //   if (!email || !password) {
-  //     res.status(400).json({ message: "Email and password are required." });
-  //     return;
-  //   }
+    const existingUser = await User.findOne({ email: email })
+    if (existingUser){
+      res.json({ 
+        user_id: existingUser._id, 
+        has_password: !!existingUser.password 
+      })
+      return
+    }
 
-  //   const user: IUser | null = await User.findOne({ email });
-  //   if (!user) {
-  //     res.status(401).json({ message: "Invalid email or password." });
-  //     return;
-  //   }
+    if (await User.countDocuments() > 0)
+      return res.error(401, "Your email doesn't exist with any account");
 
-  //   const isMatch = await bcrypt.compare(password, user.password);
-  //   if (!isMatch) {
-  //     res.status(401).json({ message: "Invalid email or password." });
-  //     return;
-  //   }
+    const newUser = await User.create({ email })
 
-  //   // Create a JWT token. The authConfig should contain jwtSecret and jwtExpiry properties.
-  //   const token = jwt.sign({ id: user._id, email: user.email }, authConfig.jwtSecret, {
-  //     expiresIn: authConfig.jwtExpiry,
-  //   });
-  //   res.status(200).json({ message: "Login successful", token });
-  // } catch (error) {
-  //   next(error);
-  // }
-};
+    await utils.request('team/create', {
+      user_id: newUser._id,
+      name: 'Personal Team'
+    })
 
-// Invite: generate an invitation token for inviting another user
-export const invite = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  // try {
-  //   // In this example, we assume a logged in user is available in req.user via the authentication middleware.
-  //   // Also assume invitee's email is provided in the body.
-  //   const { email: inviteeEmail } = req.body;
-  //   if (!inviteeEmail) {
-  //     res.status(400).json({ message: "Invitee email is required." });
-  //     return;
-  //   }
+    res.json({ 
+      user_id: newUser._id, 
+      has_password: false 
+    })
+  } catch (error: any) {
+    res.error(500, error.message || "An error occurred.");
+  }
+}
 
-  //   // Generate an invitation token; here we use JWT (you might choose a different strategy)
-  //   const inviteToken = jwt.sign({ inviteeEmail }, authConfig.inviteSecret, {
-  //     expiresIn: authConfig.inviteExpiry,
-  //   });
-  //   res.status(200).json({ message: "Invitation generated", inviteToken });
-  // } catch (error) {
-  //   next(error);
-  // }
-};
+export const verifyPassword = async (req: Request, res: Response): Promise<void>  => {
+  try {
+    const { user_id, name, password, team_id } = req.body
+
+    const user = await User.findOne({ _id: user_id })
+    
+    if (!user)
+      return res.error(401, 'Invalid User ID provided')
+
+    if (!user.password){
+      if (!name || name.trim() == '')
+        return res.error(400, 'Invalid name provided')
+
+      user.password = await utils.createHash(password.trim())
+      user.name = name.trim()
+      await user.save()
+    } else if (!(await bcrypt.compareSync(password, user.password)))
+      return res.error(401, 'Invalid password provided')
+
+    // CHECK FOR TEAM AND RETURN
+    const { auth_token } = await utils.request('team/sign-in', {
+      user_id: user._id,
+      team_id: team_id || user.teamIds[0]
+    })
+
+    res.json({
+      auth_token: auth_token
+    })
+  } catch (error: any) {
+    res.error(500, error.message || 'An error occured.')
+  }
+}
