@@ -14,7 +14,7 @@ const request = async function request<T = any>(
   isFullUrl: boolean = false,
   headers: AxiosRequestHeaders = {} as AxiosRequestHeaders
 ): Promise<T> {
-  // const url: string = isFullUrl ? endpoint : `${process.env.SERVER_HOST_IP}${endpoint}`;
+  // const url: string = isFullUrl ? endpoint : `${process.env.HOST_IP}${endpoint}`;
   const url: string = isFullUrl ? endpoint : `http://server:5000/${endpoint}`;
   if (!isFullUrl && !headers.Authorization) {
     headers.Authorization = "Bearer " + process.env.JWT_SECRET;

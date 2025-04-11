@@ -30,45 +30,90 @@ export const getSettingsInfo = async (req: Request, res: Response): Promise<void
 export const setAppDomain = async (req: Request, res: Response): Promise<void> => {
   const { domain } = req.body
 
-  const hostname = extractBaseUrl(domain)
-  if (!hostname)
-    return res.error(400, 'Invalid URL provided')
+  if (domain){
+    const hostname = extractBaseUrl(domain)
+    if (!hostname)
+      return res.error(400, 'Invalid URL provided')
+  
+    if (process.env.APP_DOMAIN == hostname)
+      return res.error(400, 'App domain already set')
 
-  if (process.env.APP_DOMAIN == hostname)
-    return res.error(400, 'Domain already set')
+    if (process.env.API_DOMAIN == hostname)
+      return res.error(400, 'This domain is already set as the API domain')
+  
+    await setDomain(hostname, 'APP_DOMAIN', `http://app:${process.env.APP_PORT!}`)
+  } else {
+    await setDomain(undefined, 'APP_DOMAIN', `http://app:${process.env.APP_PORT!}`)
+  }
 
+  res.json({
+    message: 'App domain updated successfully!'
+  })
+};
+
+export const setApiDomain = async (req: Request, res: Response): Promise<void> => {
+  const { domain } = req.body
+
+  if (domain){
+    const hostname = extractBaseUrl(domain)
+    if (!hostname)
+      return res.error(400, 'Invalid URL provided')
+
+    if (process.env.API_DOMAIN == hostname)
+      return res.error(400, 'API domain already set')
+
+    if (process.env.APP_DOMAIN == hostname)
+      return res.error(400, 'This domain is already set as the App domain')
+
+    await setDomain(hostname, 'API_DOMAIN', `http://api:${process.env.API_PORT!}`)
+  } else {
+    await setDomain(undefined, 'API_DOMAIN', `http://api:${process.env.API_PORT!}`)
+  }
+
+  res.json({
+    message: 'API domain updated successfully!'
+  })
+};
+
+// END: EXPORTS
+
+const setDomain = async (newHost: string | undefined, key: string, url: string): Promise<void> => {
   let config = YAML.load(fs.readFileSync(dynamicConfigPath, 'utf8')) as TraefikDynamicConfig
   let env = dotenv.parse(fs.readFileSync(envFilePath))
 
-  // Remove Existing Domain
+  console.log('Existing Config', config)
 
-  // Add a new router for the submitted domain
   if (!config.http.routers)
     config.http.routers = {}
 
   if (!config.http.services)
     config.http.services = {}
 
-  delete config.http.routers[`router_${process.env.APP_DOMAIN}`]
-  delete config.http.services[`service_${process.env.APP_DOMAIN}`]
+  console.log('Updated Config', config)
 
-  config.http.routers[`router_${hostname}`] = {
-    rule: `Host(\`${hostname}\`)`,
-    service: `service_${hostname}`,
-    entryPoints: ['appsecure'],
-    tls: {
-      certResolver: 'letsencrypt'
-    },
-    middlewares: ['redirect-to-https']
-  };
+  delete config.http.routers[`router_${process.env[key]}`]
+  delete config.http.services[`service_${process.env[key]}`]
+  delete env[key]
 
-  config.http.services[`service_${hostname}`] = {
-    loadBalancer: {
-      servers: [{ url: "http://app:4173" }]
-    }
-  };
+  if (newHost){
+    config.http.routers[`router_${newHost}`] = {
+      rule: `Host(\`${newHost}\`)`,
+      service: `service_${newHost}`,
+      entryPoints: ['websecure'],
+      tls: {
+        certResolver: 'letsencrypt'
+      },
+      middlewares: ['redirect-to-https']
+    };
   
-  env.APP_DOMAIN = hostname
+    config.http.services[`service_${newHost}`] = {
+      loadBalancer: {
+        servers: [{ url: url }]
+      }
+    };
+    
+    env[key] = newHost
+  }
 
   const newEnvContents = Object.entries(env)
   .map(([key, value]) => `${key}='${value}'`)
@@ -76,20 +121,6 @@ export const setAppDomain = async (req: Request, res: Response): Promise<void> =
 
   fs.writeFileSync(dynamicConfigPath, YAML.dump(config));
   fs.writeFileSync(envFilePath, newEnvContents, 'utf8');
-
-  res.json({
-    message: 'Domain updated successfully!'
-  })
-};
-
-export const setApiDomain = async (req: Request, res: Response): Promise<void> => {
-
-};
-
-// END: EXPORTS
-
-const setDomain = async (): Promise<void> => {
-
 }
 
 function extractBaseUrl(input: string): string | null {

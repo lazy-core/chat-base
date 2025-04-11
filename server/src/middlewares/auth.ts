@@ -4,10 +4,10 @@ import jwt from "jsonwebtoken";
 
 import utils from "../lib/utils";
 
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 
 interface AuthenticatedRequest extends Request {
-  auth_user?: any;
+  auth_user?: IUser;
   auth_team_id?: string;
 }
 

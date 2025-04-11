@@ -1,8 +1,8 @@
 # traefik/traefik.yml
 entryPoints:
-  app:
+  web:
     address: ":80"
-  appsecure:
+  websecure:
     address: ":443"
   server:
     address: ":5000"
@@ -22,4 +22,4 @@ certificatesResolvers:
       email: letsencrypt@lazycore.io
       storage: /traefik/acme.json
       httpChallenge:
-        entryPoint: app
+        entryPoint: web
