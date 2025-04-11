@@ -24,8 +24,6 @@
 
 ### CREATE SERVICE TO WATCH .ENV
 
-#!/bin/bash
-
 # Variables to customize
 WORK_DIR=$(pwd)
 SERVICE_NAME="chat-base.service"

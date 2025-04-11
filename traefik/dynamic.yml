@@ -1,0 +1,11 @@
+# traefik/dynamic.yml
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  routers:
+
+  services:
