@@ -3,9 +3,14 @@ import fs from 'fs'
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import YAML from 'js-yaml';
+import dotenv from 'dotenv';
 
 import User from "../models/User";
 import Team from "../models/Team";
+
+const dynamicConfigPath = '/traefik/dynamic.yml'
+const envFilePath = '/env/.env'
 
 export const getSettingsInfo = async (req: Request, res: Response): Promise<void> => {
 
@@ -14,8 +19,11 @@ export const getSettingsInfo = async (req: Request, res: Response): Promise<void
 export const setRootDomain = async (req: Request, res: Response): Promise<void> => {
   const { domain } = req.body
 
-  // let config = fs.existsSync(dynamicConfigPath) ?
-  //   YAML.parse(fs.readFileSync(dynamicConfigPath, 'utf8')) : { http: { routers: {}, services: {} } };
+  let config = fs.existsSync(dynamicConfigPath) ?
+    YAML.load(fs.readFileSync(dynamicConfigPath, 'utf8')) : { http: { middlewares: {}, routers: {}, services: {} }};
+
+  let env = fs.existsSync(envFilePath) ?
+    dotenv.parse(fs.readFileSync(envFilePath)) : {};
 
   // // Add a new router for the submitted domain
   // config.http.routers[`router_${domain}`] = {
@@ -35,6 +43,8 @@ export const setRootDomain = async (req: Request, res: Response): Promise<void> 
 
   // // Write back the updated configuration
   // fs.writeFileSync(dynamicConfigPath, YAML.stringify(config));
+
+  // console.log('Config', config, env)
 
   res.json({
     message: 'Domain updated successfully!'

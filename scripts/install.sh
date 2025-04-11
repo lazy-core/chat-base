@@ -19,3 +19,45 @@
 
 # echo "Response received:"
 # echo "${response}"
+
+###
+
+### CREATE SERVICE TO WATCH .ENV
+
+# Variables to customize
+WORK_DIR=$(pwd)
+SERVICE_FILE="/etc/systemd/system/chat-base.service"
+SCRIPT_PATH="${WORK_DIR}/refresh.sh"
+
+# Create the systemd service file using a here-document.
+# Using 'sudo tee' allows writing to /etc/systemd/system.
+echo "Creating systemd service file..."
+sudo tee "$SERVICE_FILE" > /dev/null <<EOF
+[Unit]
+Description=Watch .env and Update Docker Compose on Changes
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=${SCRIPT_PATH}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Service file created at ${SERVICE_FILE}"
+
+# Reload systemd to pick up the new service file.
+echo "Reloading systemd daemon..."
+sudo systemctl daemon-reload
+
+# Start the service.
+echo "Starting the service..."
+sudo systemctl start chat-base.service
+
+# Enable the service to start at boot.
+echo "Enabling the service to run on boot..."
+sudo systemctl enable chat-base.service
+
+echo "The chat-base service has been successfully installed and started."

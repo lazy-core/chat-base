@@ -28,7 +28,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/traefik/traefik.yml:ro
-      - ./traefik/dynamic.yml:/traefik/dynamic.yml
+      - ./traefik/dynamic.yml:/traefik/dynamic.yml:ro
       - ./traefik/acme.json:/traefik/acme.json
     networks:
       - chat-base
@@ -39,7 +39,8 @@ services:
     labels:
       - "traefik.enable=true"
       # Catch-all rule for the Vite app (front-end).
-      - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.vite.rule=Host(``) && PathPrefix(`/`)"
+      # - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
       - "traefik.http.routers.vite.entrypoints=app"
       # Internal port must match the one exposed in the app container.
       - "traefik.http.services.vite.loadbalancer.server.port=4173"
@@ -63,6 +64,9 @@ services:
 
       - SERVER_DOMAIN=${SERVER_DOMAIN}
       - API_DOMAIN=${API_DOMAIN}
+    volumes:
+      - ./traefik/dynamic.yml:/traefik/dynamic.yml
+      - ./.env:/env/.env
     networks:
       - chat-base
 
