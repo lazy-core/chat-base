@@ -73,5 +73,5 @@ build/Release/
 .tern-port
 
 # Certificates
-# traefik/acme.json
+traefik/acme.json
 traefik/dynamic.yml
