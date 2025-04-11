@@ -33,17 +33,6 @@ services:
     networks:
       - chat-base
 
-  api:
-    container_name: chat-base-api
-    build: ./api
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`${HOST_IP}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.api.entrypoints=api"
-      - "traefik.http.services.api.loadbalancer.server.port=${API_PORT}"
-    networks:
-      - chat-base
-
   app:
     container_name: chat-base-app
     build: ./app
@@ -53,6 +42,17 @@ services:
       # - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
       - "traefik.http.routers.vite.entrypoints=web"
       - "traefik.http.services.vite.loadbalancer.server.port=${APP_PORT}"
+    networks:
+      - chat-base
+
+  api:
+    container_name: chat-base-api
+    build: ./api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`${HOST_IP}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.api.entrypoints=api"
+      - "traefik.http.services.api.loadbalancer.server.port=${API_PORT}"
     networks:
       - chat-base
 
@@ -97,8 +97,20 @@ services:
     networks:
       - chat-base
 
+  cassandra:
+    container_name: chat-base-cassandra
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+
 volumes:
   mongodb_data:
+  cassandra_data:
 
 networks:
   chat-base:
