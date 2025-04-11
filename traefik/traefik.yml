@@ -17,7 +17,7 @@ providers:
     watch: true
 
 certificatesResolvers:
-  myresolver:
+  letsencrypt:
     acme:
       email: letsencrypt@lazycore.io
       storage: /traefik/acme.json

@@ -28,9 +28,9 @@ export const authenticate = async (req: AuthenticatedRequest, res: Response, nex
       if (!user?.sessions.some(s => s.authToken == token))
         return res.error(401, 'Invalid token provided')
     }
-    
-    req.auth_user = user
-    req.auth_team_id = decodedToken?.teamId
+
+    req.body.auth_user = user
+    req.body.auth_team_id = decodedToken?.teamId
 
     next();
   } catch (error) {

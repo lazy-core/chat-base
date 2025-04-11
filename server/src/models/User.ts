@@ -33,6 +33,7 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     teamIds: [{
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
     }],
     sessions: [{
       authToken: String

@@ -16,9 +16,9 @@ services:
       - "--entrypoints.server.address=:5000"
       - "--entrypoints.api.address=:5001"
       
-      - "--certificatesResolvers.myresolver.acme.email=letsencrypt@lazycore.io"
-      - "--certificatesResolvers.myresolver.acme.storage=/traefik/acme.json"
-      - "--certificatesResolvers.myresolver.acme.httpChallenge.entryPoint=app"
+      - "--certificatesResolvers.letsencrypt.acme.email=letsencrypt@lazycore.io"
+      - "--certificatesResolvers.letsencrypt.acme.storage=/traefik/acme.json"
+      - "--certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=app"
     ports:
       - "80:80"
       - "443:443"
@@ -56,11 +56,14 @@ services:
       - "traefik.http.routers.server.entrypoints=server"
       - "traefik.http.services.server.loadbalancer.server.port=5000"
     environment:
+      - JWT_SECRET=${JWT_SECRET}
+
       - MONGO_DB_USERNAME=${MONGO_DB_USERNAME}
       - MONGO_DB_PASSWORD=${MONGO_DB_PASSWORD}
       - MONGO_DB_NAME=${MONGO_DB_NAME}
 
       - SERVER_DOMAIN=${SERVER_DOMAIN}
+      - APP_DOMAIN=${APP_DOMAIN}
       - API_DOMAIN=${API_DOMAIN}
     volumes:
       - ./traefik/dynamic.yml:/traefik/dynamic.yml

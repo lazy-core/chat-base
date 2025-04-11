@@ -33,7 +33,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
     await utils.request('team/create', {
       user_id: newUser._id,
       name: 'Personal Team'
-    })
+    }, 'POST')
 
     res.json({ 
       user_id: newUser._id, 
@@ -57,6 +57,9 @@ export const verifyPassword = async (req: Request, res: Response): Promise<void>
       if (!name || name.trim() == '')
         return res.error(400, 'Invalid name provided')
 
+      if (!password || password.trim() == '')
+        return res.error(400, 'Invalid password provided')
+
       user.password = await utils.createHash(password.trim())
       user.name = name.trim()
       await user.save()
@@ -67,7 +70,7 @@ export const verifyPassword = async (req: Request, res: Response): Promise<void>
     const { auth_token } = await utils.request('team/sign-in', {
       user_id: user._id,
       team_id: team_id || user.teamIds[0]
-    })
+    }, 'POST')
 
     res.json({
       auth_token: auth_token

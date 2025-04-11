@@ -5,7 +5,7 @@ import { verifyEmail, verifyPassword } from "./controllers/auth";
 import { createProject, generateSecretKey, generatePublishableKey } from "./controllers/project";
 import { createTeam, signInToTeam, updateTeamName } from "./controllers/team";
 import { createRootUser } from "./controllers/user";
-import { getSettingsInfo, setRootDomain, setApiDomain } from "./controllers/settings";
+import { getSettingsInfo, setAppDomain, setApiDomain } from "./controllers/settings";
 
 import { authenticate } from "./middlewares/auth";
 
@@ -27,7 +27,7 @@ router.post("/team/sign-in", authenticate, signInToTeam);
 router.post("/team/update-name", authenticate, updateTeamName);
 
 router.get("/settings", authenticate, getSettingsInfo);
-router.post("/settings/root-domain", authenticate, setRootDomain);
+router.post("/settings/root-domain", authenticate, setAppDomain);
 router.post("/settings/api-domain", authenticate, setApiDomain);
 
 export default router;

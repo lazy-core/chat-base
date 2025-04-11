@@ -13,11 +13,9 @@ import User from "../models/User";
 export const signInToTeam = async (req: Request, res: Response): Promise<void> => {
   const { auth_user, team_id } = req.body
 
-  console.log(auth_user, team_id)
-
   const authToken = utils.createToken({ userId: auth_user._id, teamId: team_id })
   auth_user.sessions.push({
-    auth: authToken
+    authToken: authToken
   })
   auth_user.sessions = auth_user.sessions.slice(-constants.MAX_SESSIONS)
   await auth_user.save()
@@ -34,7 +32,10 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
   if (existingTeam) 
     return res.error(409, 'Another team with that name already exists')
 
-  const newTeam = await Team.create({ name: name.trim(), members: [{ userId: auth_user._id }] })
+  const newTeam = await Team.create({ 
+    name: name.trim(), 
+    members: [{ userId: auth_user._id, role: 'admin' }] 
+  })
   
   auth_user.teamIds.push(newTeam._id)
   await auth_user.save()
