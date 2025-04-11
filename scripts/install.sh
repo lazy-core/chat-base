@@ -24,13 +24,46 @@
 
 ### CREATE SERVICE TO WATCH .ENV
 
+#!/bin/bash
+
 # Variables to customize
 WORK_DIR=$(pwd)
-SERVICE_FILE="/etc/systemd/system/chat-base.service"
+SERVICE_NAME="chat-base.service"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
+
+# Stop the service if it is running.
+if systemctl is-active --quiet "${SERVICE_NAME}"; then
+  echo "Stopping ${SERVICE_NAME}..."
+  sudo systemctl stop "${SERVICE_NAME}"
+fi
+
+# Disable the service if it is enabled.
+if systemctl is-enabled --quiet "${SERVICE_NAME}"; then
+  echo "Disabling ${SERVICE_NAME}..."
+  sudo systemctl disable "${SERVICE_NAME}"
+fi
+
+# Remove the service file if it exists.
+if [ -f "${SERVICE_FILE}" ]; then
+  echo "Removing ${SERVICE_FILE}..."
+  sudo rm -f "${SERVICE_FILE}"
+fi
+
+# Reload systemd so it forgets about the removed service.
+echo "Reloading systemd daemon..."
+sudo systemctl daemon-reload
+
+# Optionally, reset failed state if needed.
+sudo systemctl reset-failed
+
+echo "The ${SERVICE_NAME} has been completely removed."
+
 SCRIPT_PATH="${WORK_DIR}/refresh.sh"
 
+# Reload systemd daemon so systemd forgets the old service.
+sudo systemctl daemon-reload
+
 # Create the systemd service file using a here-document.
-# Using 'sudo tee' allows writing to /etc/systemd/system.
 echo "Creating systemd service file..."
 sudo tee "$SERVICE_FILE" > /dev/null <<EOF
 [Unit]
@@ -40,6 +73,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=${SCRIPT_PATH}
+WorkingDirectory=${WORK_DIR}
 Restart=always
 
 [Install]

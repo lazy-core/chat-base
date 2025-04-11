@@ -39,7 +39,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Catch-all rule for the Vite app (front-end).
-      - "traefik.http.routers.vite.rule=Host(``) && PathPrefix(`/`)"
+      - "traefik.http.routers.vite.rule=Host(`${SERVER_HOST_IP}`) && PathPrefix(`/`)"
       # - "traefik.http.routers.vite.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
       - "traefik.http.routers.vite.entrypoints=app"
       # Internal port must match the one exposed in the app container.
@@ -52,9 +52,7 @@ services:
     build: ./server
     labels:
       - "traefik.enable=true"
-      # This rule routes requests that start with /api to your server.
-      # If you prefer a subdomain (e.g. api.yourdomain.com), update this rule accordingly.
-      - "traefik.http.routers.server.rule=HostRegexp(`{host:.+}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.server.rule=Host(`${SERVER_HOST_IP}`) && PathPrefix(`/`)"
       - "traefik.http.routers.server.entrypoints=server"
       - "traefik.http.services.server.loadbalancer.server.port=5000"
     environment:
