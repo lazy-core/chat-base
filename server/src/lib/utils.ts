@@ -1,6 +1,7 @@
-import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios'
-import bcrypt from 'bcrypt'
+import axios, { AxiosRequestHeaders, AxiosResponse } from "axios";
+import bcrypt from "bcrypt";
 import jwt, { Algorithm } from "jsonwebtoken";
+import { JWT_SECRET } from "../config";
 
 interface DecodedToken {
   timestamp: number;
@@ -15,9 +16,12 @@ const request = async function request<T = any>(
   headers: AxiosRequestHeaders = {} as AxiosRequestHeaders
 ): Promise<T> {
   // const url: string = isFullUrl ? endpoint : `${process.env.HOST_IP}${endpoint}`;
-  const url: string = isFullUrl ? endpoint : `http://server:5000/${endpoint}`;
+
+  const url: string = isFullUrl
+    ? endpoint
+    : `http://localhost:4000/${endpoint}`;
   if (!isFullUrl && !headers.Authorization) {
-    headers.Authorization = "Bearer " + process.env.JWT_SECRET;
+    headers.Authorization = "Bearer " + JWT_SECRET;
   }
 
   try {
@@ -40,33 +44,39 @@ const request = async function request<T = any>(
     console.log("Error", errorMessage, url);
     return { err_message: errorMessage } as T;
   }
-}
+};
 
 export default {
   request: request,
   isValidEmail: (email?: string): boolean => {
-    return !!email?.match(
-      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    ) || false
+    return (
+      !!email?.match(
+        /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      ) || false
+    );
   },
   createHash: async (str: string): Promise<string> => {
-    const saltRounds = 10
-    const hash = await bcrypt.hashSync(str, saltRounds)
-    return hash
+    const saltRounds = 10;
+    const hash = await bcrypt.hashSync(str, saltRounds);
+    return hash;
   },
   createToken: <T extends object>(
     obj: T,
     secret?: string,
     algorithm: Algorithm = "HS256"
   ): string => {
-    return jwt.sign({ timestamp: Date.now(), ...obj }, process.env.JWT_SECRET || '', { algorithm });
+    return jwt.sign({ timestamp: Date.now(), ...obj }, JWT_SECRET || "", {
+      algorithm,
+    });
   },
   decodeToken: (
     token: string,
     threshold?: number
-  ): (DecodedToken & { elapsedTime: number; isExpired: boolean }) | undefined => {
+  ):
+    | (DecodedToken & { elapsedTime: number; isExpired: boolean })
+    | undefined => {
     try {
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET || '') as DecodedToken;
+      const decodedToken = jwt.verify(token, JWT_SECRET || "") as DecodedToken;
       const elapsedTime = (Date.now() - decodedToken.timestamp) / 1000;
 
       return {
@@ -77,5 +87,5 @@ export default {
     } catch (e: any) {
       return undefined;
     }
-  }
-}
+  },
+};

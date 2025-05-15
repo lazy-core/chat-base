@@ -3,34 +3,88 @@ import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { generateKeyPairSync } from "crypto";
 
 import constants from "../lib/constants";
 import utils from "../lib/utils";
 
 import Team from "../models/Team";
 import User from "../models/User";
+import Project from "../models/Project";
 
-export const createProject = async (req: Request, res: Response): Promise<void> => {
-  const { auth_user, name } = req.body
+export const createProject = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { name, description, team_id } = req.body;
 
-  const existingTeam = await Team.findOne({ _id: { $in: auth_user.teamIds }, name: name.trim() })
-  if (existingTeam) 
-    return res.error(409, 'Another team with that name already exists')
+  const team = await Team.findById(team_id);
 
-  const newTeam = await Team.create({ name: name.trim(), members: [{ userId: auth_user._id }] })
-  
-  auth_user.teamIds.push(newTeam._id)
-  await auth_user.save()
+  if (!team) return res.error(404, "Team not found");
 
-  res.json({
-    team_id: newTeam._id
-  })
-}
+  const existingProject = await Project.findOne({
+    name: name.trim(),
+    teamId: team_id,
+  });
 
-export const generateSecretKey = async (req: Request, res: Response): Promise<void> => {
-  
-}
+  if (existingProject)
+    return res.error(409, "Another project with that name already exists");
 
-export const generatePublishableKey = async (req: Request, res: Response): Promise<void> => {
-  
-}
+  const { privateKey, publicKey } = generateRSAKeyPair();
+
+  await Project.create({
+    name: name.trim(),
+    description: description.trim(),
+    teamId: team_id,
+    keys: {
+      secret: privateKey,
+      publishable: publicKey,
+    },
+  });
+
+  res.status(204).json({});
+};
+
+export const generateKeyPair = async (req: Request, res: Response) => {
+  try {
+    const { project_id } = req.body;
+    const { publicKey, privateKey } = generateRSAKeyPair();
+
+    const project = await Project.findById(project_id);
+
+    if (!project) return res.error(404, "Project not found");
+
+    project.keys.secret = privateKey;
+    project.keys.publishable = publicKey;
+
+    await project.save();
+
+    res.status(200).json({
+      message: "Keys generated successfully",
+      keys: {
+        publicKey,
+        privateKey,
+      },
+    });
+  } catch (error: any) {
+    res.error(500, error.message || "An error occurred.");
+  }
+};
+
+export const generateRSAKeyPair = () => {
+  const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+      type: "spki",
+      format: "pem",
+    },
+    privateKeyEncoding: {
+      type: "pkcs8",
+      format: "pem",
+    },
+  });
+  return {
+    publicKey,
+    privateKey,
+  };
+};
