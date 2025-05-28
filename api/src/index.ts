@@ -1,9 +1,8 @@
-import { App } from "./app";
-import { sequelize } from "./models";
-import AppRoutes from "./routes";
-import { ValidateEnv } from "./utils/validateEnv";
+import { App } from './app';
+import AppRoutes from './routes';
+import { ValidateEnv } from './utils/validateEnv';
 ValidateEnv();
 
-const app = new App(AppRoutes, sequelize);
+const app = new App(AppRoutes);
 
 app.listen();

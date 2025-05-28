@@ -19,6 +19,7 @@ import Container from 'typedi';
 import { NotificationService } from './services/notification.service';
 import { initCassandra } from './models/index';
 import { stream } from './utils/stream';
+import { userJwtStrategy, userPassport } from './config/passport';
 
 export class App {
   public app: express.Application;
@@ -88,6 +89,15 @@ export class App {
     );
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+
+    this.app.use(
+      userPassport.initialize({
+        userProperty: 'user',
+        assignProperty: 'user',
+        key: 'user',
+      }),
+    );
+    userPassport.use('user', userJwtStrategy);
   }
 
   private initializeRoutes(routes: Routes[]) {

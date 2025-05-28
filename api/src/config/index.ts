@@ -1,7 +1,10 @@
-import { config } from "dotenv";
-config();
+import { config } from 'dotenv';
+import { resolve } from 'path';
+const envPath = resolve(__dirname, '../../../.env');
 
-export const CREDENTIALS = process.env.CREDENTIALS === "true";
+config({ path: envPath });
+
+export const CREDENTIALS = process.env.CREDENTIALS === 'true';
 
 export const {
   NODE_ENV,

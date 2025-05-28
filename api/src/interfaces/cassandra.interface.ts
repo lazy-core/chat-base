@@ -56,7 +56,7 @@ export interface CassandraSession {
   projectId: string;
   token: string;
   userId: string;
-  type: 'Access' | 'Refresh';
+  type: 'access' | 'refresh';
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
