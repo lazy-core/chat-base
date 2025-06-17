@@ -19,7 +19,7 @@ const request = async function request<T = any>(
 
   const url: string = isFullUrl
     ? endpoint
-    : `http://localhost:4000/${endpoint}`;
+    : `http://localhost:8000/${endpoint}`;
   if (!isFullUrl && !headers.Authorization) {
     headers.Authorization = "Bearer " + JWT_SECRET;
   }

@@ -1,15 +1,8 @@
 // src/controllers/auth.ts
-import { Request, Response, NextFunction } from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import { generateKeyPairSync } from "crypto";
-
-import constants from "../lib/constants";
-import utils from "../lib/utils";
+import { Request, Response } from "express";
+import { randomBytes } from "crypto";
 
 import Team from "../models/Team";
-import User from "../models/User";
 import Project from "../models/Project";
 
 export const createProject = async (
@@ -30,7 +23,7 @@ export const createProject = async (
   if (existingProject)
     return res.error(409, "Another project with that name already exists");
 
-  const { privateKey, publicKey } = generateRSAKeyPair();
+  const { privateKey, publicKey } = generateKeyPair();
 
   await Project.create({
     name: name.trim(),
@@ -45,10 +38,10 @@ export const createProject = async (
   res.status(204).json({});
 };
 
-export const generateKeyPair = async (req: Request, res: Response) => {
+export const generateKeys = async (req: Request, res: Response) => {
   try {
     const { project_id } = req.body;
-    const { publicKey, privateKey } = generateRSAKeyPair();
+    const { publicKey, privateKey } = generateKeyPair();
 
     const project = await Project.findById(project_id);
 
@@ -71,20 +64,11 @@ export const generateKeyPair = async (req: Request, res: Response) => {
   }
 };
 
-export const generateRSAKeyPair = () => {
-  const { publicKey, privateKey } = generateKeyPairSync("rsa", {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-      type: "spki",
-      format: "pem",
-    },
-    privateKeyEncoding: {
-      type: "pkcs8",
-      format: "pem",
-    },
-  });
+export const generateKeyPair = () => {
+  const apiKey = randomBytes(32).toString("hex");
+  const secretKey = randomBytes(64).toString("hex");
   return {
-    publicKey,
-    privateKey,
+    publicKey: apiKey,
+    privateKey: secretKey,
   };
 };

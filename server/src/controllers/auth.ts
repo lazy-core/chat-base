@@ -1,14 +1,11 @@
 // src/controllers/auth.ts
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-
-import constants from "../lib/constants";
 import utils from "../lib/utils";
 
 import Team from "../models/Team";
 import User from "../models/User";
+import Project from "../models/Project";
 
 export const verifyEmail = async (
   req: Request,
@@ -102,5 +99,37 @@ export const verifyPassword = async (
     });
   } catch (error: any) {
     res.error(500, error.message || "An error occured.");
+  }
+};
+
+export const verifyKeys = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { apiKey, secretKey } = req.body;
+
+    if (!apiKey || !secretKey) {
+      return res
+        .status(400)
+        .json({ error: "API Key and Secret Key are required." });
+    }
+
+    const project = await Project.findOne({
+      "keys.publishable": apiKey,
+      "keys.secret": secretKey,
+    });
+
+    if (!project) {
+      return res.status(401).json({ error: "Invalid API Key or Secret Key." });
+    }
+
+    return res.status(200).json({
+      projectId: project._id,
+      teamId: project.teamId,
+      projectName: project.name,
+    });
+  } catch (error) {
+    console.error("Error verifying keys:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while verifying keys." });
   }
 };
