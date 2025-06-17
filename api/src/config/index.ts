@@ -9,6 +9,7 @@ export const CREDENTIALS = process.env.CREDENTIALS === 'true';
 export const {
   NODE_ENV,
   PORT,
+  API_PORT,
   SECRET_KEY,
   LOG_FORMAT,
   LOG_DIR,

@@ -14,7 +14,7 @@ export class SessionModel {
 
     const query = `
       INSERT INTO sessions_by_token (
-        project_id, token, user_id, type, expires_at, created_at, updated_at
+        project_id, "token", user_id, type, expires_at, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 

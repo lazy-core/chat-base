@@ -1,4 +1,5 @@
 import { cassandraClient } from '.';
+import { ReadReceipts, TypingIndicators } from '../dtos/chat.dto';
 import { CassandraUser } from '../interfaces/cassandra.interface';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,11 +15,22 @@ export class UserModel {
 
     const query = `
       INSERT INTO users_by_project (
-        project_id, user_id, username, name, image, privacy_settings, created_at
+        project_id, user_id, user_name, name, image, privacy_settings, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await cassandraClient.execute(query, [user.projectId, user.userId, user.username, user.name, user.image, user.privacySettings, user.createdAt]);
+    const parsedPrivacySettings = {
+      typing_indicators: {
+        enabled: (user.privacySettings?.typing_indicators as any) === TypingIndicators.ENABLED,
+      },
+      read_receipts: {
+        enabled: (user.privacySettings?.read_receipts as any) === ReadReceipts.ENABLED,
+      },
+    };
+
+    await cassandraClient.execute(query, [user.projectId, user.userId, user.username, user.name, user.image, parsedPrivacySettings, user.createdAt], {
+      prepare: true,
+    });
 
     return user;
   }

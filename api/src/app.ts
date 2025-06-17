@@ -6,7 +6,7 @@ import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
-import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from './config';
+import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS, API_PORT } from './config';
 import { createServer, Server } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { Routes } from './interfaces/routes.interface';
@@ -34,7 +34,7 @@ export class App {
     this.handleGraceFullShutDown();
     this.app = express();
     this.env = NODE_ENV || 'development';
-    this.port = PORT || 3005;
+    this.port = API_PORT || 3005;
 
     this.httpServer = createServer(this.app);
 
